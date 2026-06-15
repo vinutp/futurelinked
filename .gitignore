@@ -1,0 +1,13 @@
+# Visual Studio cache (machine-specific, not part of the project)
+.vs/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local database — excluded so the deployed app seeds fresh demo data on first run
+backend/data/
+
+# Misc
+.DS_Store
+*.log

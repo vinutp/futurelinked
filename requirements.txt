@@ -1,0 +1,9 @@
+# Career OS runs on the Python standard library alone — there is nothing to
+# install. `pip install -r requirements.txt` is a no-op and is here only so
+# tooling that expects the file is satisfied.
+#
+# Requirement: Python 3.8+
+#
+# Optional: to enable live Claude generation for career paths and resume
+# polish, set the ANTHROPIC_API_KEY environment variable before starting.
+# No SDK is needed; the app calls the API with urllib from the standard library.
