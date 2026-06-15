@@ -47,6 +47,7 @@ Views.landing = async (app) => {
           <div class="s">92/100 · shares 4 of 4 required skills</div>
           <div class="mini-bar"><span style="width:92%"></span></div>
         </div>
+        <div class="disclaimer" style="margin-top:14px;">Disclaimer: The statistics and data presented are simulated and do not represent official data from Universiti Teknologi PETRONAS.</div>
       </div>
     </div>
   </div>`;
@@ -151,9 +152,9 @@ function demoLoginsBlock() {
   return `
   <div class="demo-logins">
     <div class="dl-head">Demo logins · click to fill (password: password123)</div>
-    <div class="dl" data-email="careers@utp.edu.my"><span>🎓 University</span><code>careers@utp.edu.my</code></div>
     <div class="dl" data-email="amirah@utp.edu.my"><span>🎯 Candidate</span><code>amirah@utp.edu.my</code></div>
     <div class="dl" data-email="talent@helix.com.my"><span>🏢 Employer</span><code>talent@helix.com.my</code></div>
+    <div class="dl" data-email="careers@utp.edu.my"><span>🎓 University</span><code>careers@utp.edu.my</code></div>
   </div>`;
 }
 
@@ -236,8 +237,15 @@ function shell(activeHref, contentHtml) {
         <button class="bell" id="bell" data-go="#/notifications" title="Notifications">🔔<span class="bell-badge" id="bell-badge" style="display:none">0</span></button>
       </div>` : ''}
       <div id="content">${contentHtml}</div>
+      ${role === 'university' ? simulatedDataDisclaimer() : ''}
     </main>
   </div>`;
+}
+
+/* Shown on university pages and the landing stats panel — the demo data is
+   simulated, not official UTP data. */
+function simulatedDataDisclaimer() {
+    return `<div class="disclaimer">Disclaimer: The statistics and data presented are simulated and do not represent official data from Universiti Teknologi PETRONAS.</div>`;
 }
 
 // Tracks any polling timers so we can stop them when the view changes.
@@ -339,7 +347,7 @@ Views.candidateDashboard = async (app) => {
       <div class="section">
         <div class="section-head"><h2>Recommended for you</h2><a class="btn ghost small" data-go="#/jobs">See all</a></div>
         <div class="card-grid">
-          ${matches.length ? matches.slice(0, 4).map(jobMatchCard).join('') : emptyState('No matches yet — add skills to your profile.')}
+          ${matches.length ? matches.slice(0, 4).map(jobMatchCard).join('') : emptyState('No matches yet. Add skills to your profile.')}
         </div>
       </div>`;
     wireGo(content);
@@ -575,8 +583,8 @@ function candidateApplicationCard(a) {
       </div>
       ${a.status === 'interview' && a.interviewDate ? `
         <div class="interview-box mt8">
-          <div class="small bold">📅 Interview proposed for ${esc(a.interviewDate)}</div>
-          ${a.interviewResponse === 'accepted' ? `<span class="badge green mt8">You accepted</span>`
+          <div class="small bold">📅 Interview proposed for ${fmtDateDMY(a.interviewDate)}${a.interviewStartTime ? ` at ${fmtTimeRange(a.interviewStartTime, a.interviewEndTime)}` : ''}</div>
+          ${a.interviewResponse === 'accepted' ? `<span class="badge green mt8">Candidate accepted</span>`
             : a.interviewResponse === 'rejected' ? `<span class="badge rose mt8">You declined</span><div class="tiny muted mt8">Reason: ${esc(a.interviewRejectReason)}</div>`
             : `<div class="mt8 flex" style="gap:8px;">
                  <button class="btn small" data-accept="${a.id}">Accept</button>
@@ -631,7 +639,7 @@ Views.paths = async (app) => {
     ]);
     const tag = result.source === 'claude' ? `Claude · ${esc(result.model || model)}` : 'Explainable model';
     content.innerHTML = `
-      <div class="page-head"><div><h1>Career paths</h1><p>A range of realistic next moves for someone with your shape — with the trade-offs named.</p></div></div>
+      <div class="page-head"><div><h1>Career paths</h1><p>A range of realistic next moves for someone with your shape, with the trade-offs named.</p></div></div>
       <div class="ai-card mb16">
         <div class="ai-head">
           <h3>🧭 Where you could go next</h3>
@@ -675,7 +683,7 @@ Views.candidateProfile = async (app) => {
     const experience = profile.experience || [];
 
     content.innerHTML = `
-      <div class="page-head"><div><h1>Resume / CV builder</h1><p>Build your CV once. It’s attached automatically every time you apply to a job.</p></div>
+      <div class="page-head"><div><h1>Resume builder</h1><p>Build your CV once. It’s attached automatically every time you apply to a job.</p></div>
         <button class="btn" type="submit" form="cvf">Save CV</button></div>
       <form id="cvf" class="stack">
 
@@ -1058,65 +1066,108 @@ function applicantCard(a) {
 
       ${a.status === 'interview' && a.interviewDate ? `
         <div class="interview-box mt8">
-          <div class="small bold">📅 Interview proposed for ${esc(a.interviewDate)}</div>
-          ${a.interviewResponse === 'accepted' ? `<span class="badge green mt8">Candidate accepted</span>`
+          <div class="small bold">📅 Interview proposed for ${fmtDateDMY(a.interviewDate)}${a.interviewStartTime ? ` at ${fmtTimeRange(a.interviewStartTime, a.interviewEndTime)}` : ''}</div>
+          ${a.interviewResponse === 'accepted' ? `<span class="badge green mt8">You accepted</span>`
             : a.interviewResponse === 'rejected' ? `<span class="badge rose mt8">Candidate declined</span><div class="tiny muted mt8">Reason: ${esc(a.interviewRejectReason)}</div>`
             : `<div class="tiny muted mt8">Awaiting the candidate's response.</div>`}
         </div>` : ''}
 
       <div class="mt16 flex wrap" style="gap:8px;">
-        <button class="btn small" data-offer="${a.id}" ${decided ? 'disabled' : ''}>✅ Offer</button>
-        <button class="btn small danger" data-reject="${a.id}" ${decided ? 'disabled' : ''}>❌ Reject</button>
-        <button class="btn small secondary" data-interview="${a.id}" data-profile="${c.id || ''}">📅 Interview</button>
+        <button class="btn small" data-offer="${a.id}" ${decided ? 'disabled' : ''}>Offer</button>
+        <button class="btn small danger" data-reject="${a.id}" ${decided ? 'disabled' : ''}>Reject</button>
+        <button class="btn small secondary" data-interview="${a.id}" data-profile="${c.id || ''}">Schedule Interview</button>
         <button class="btn small secondary" data-chat="${c.userId || ''}">💬 Chat</button>
         <button class="btn small ghost" data-viewform="${a.id}">📄 Application form</button>
-        <button class="btn small ghost" data-viewcv="${a.id}">📑 Resume / CV</button>
+        <button class="btn small ghost" data-viewcv="${a.id}">📑 Resume </button>
       </div>
       ${m.reasons ? whyBlock(m) : ''}
     </div>`;
 }
 
-/* View-only: the submitted application form. */
-function openApplicationFormModal(a) {
-  const row = (label, val) => val ? `<div class="kv"><span class="k">${esc(label)}</span><span class="v">${esc(val)}</span></div>` : '';
-  openModal(
-    'Application form (view only)',
-    `<div class="cv-doc">
-      ${row('Applicant', (a.resumeSnapshot || {}).name)}
-      ${row('Expected salary', a.expectedSalary != null ? money(a.expectedSalary) : '')}
-      ${row('Work arrangement', a.workArrangement)}
-      ${row('Preferred location', a.preferredLocation)}
-      ${row('Earliest start date', a.earliestStartDate)}
-      ${row('Declaration', a.declaration ? '✓ Certified accurate by applicant' : '—')}
-      ${a.coverNote ? `<div class="kv"><span class="k">Cover note</span><span class="v">${esc(a.coverNote)}</span></div>` : ''}
-    </div>`,
-    `<button class="btn" id="close-app">Close</button>`
-  );
-  $('#close-app').addEventListener('click', closeModal);
+/* Read-only field helpers — render the candidate's actual form layout, but
+   non-editable (so the employer sees exactly what the candidate built). */
+function roField(label, val) {
+    return `<div class="field" style="margin:0"><label>${esc(label)}</label><input class="input" value="${esc(val || '')}" readonly /></div>`;
+}
+function roArea(label, val) {
+    return `<div class="field" style="margin:0"><label>${esc(label)}</label><textarea class="input" readonly>${esc(val || '')}</textarea></div>`;
+}
+function widenModal() {
+    const m = $('.modal', $('#modal-bg'));
+    if (m) m.style.maxWidth = '760px';
 }
 
-/* View-only: the submitted CV snapshot. */
+function openApplicationFormModal(a) {
+    const cv = a.resumeSnapshot || {};
+    openModal(
+        'Application form',
+        `<form class="stack">
+      ${roField('Applicant', cv.name)}
+      <div class="row wrap">
+        ${roField('Expected salary (RM)', a.expectedSalary != null ? money(a.expectedSalary) : '')}
+        ${roField('Work arrangement', a.workArrangement)}
+      </div>
+      <div class="row wrap">
+        ${roField('Preferred location', a.preferredLocation)}
+        ${roField('Earliest start date', a.earliestStartDate)}
+      </div>
+      ${roArea('Cover note', a.coverNote)}
+    </form>`,
+        `<button class="btn" id="close-app">Close</button>`
+    );
+    widenModal();
+    $('#close-app').addEventListener('click', closeModal);
+}
+
+/* View-only: the submitted CV, shown in the same layout the candidate built. */
 function openCvModal(a) {
-  const cv = a.resumeSnapshot || {};
-  const eduHtml = (cv.education || []).filter((e) => e.institution).map((e) =>
-    `<li><b>${esc(e.fieldOfStudy || 'Studies')}</b> — ${esc(e.institution)} <span class="muted tiny">${esc(e.startYear)}${e.endYear ? '–' + esc(e.endYear) : ''}</span></li>`).join('');
-  const projHtml = (cv.projects || []).map((p) =>
-    `<li><b>${esc(p.name)}</b>${p.description ? ' — ' + esc(p.description) : ''}</li>`).join('');
-  const expHtml = (cv.experience || []).map((x) =>
-    `<li><b>${esc(x.title)}</b>${x.organisation || x.org ? ' · ' + esc(x.organisation || x.org) : ''} <span class="muted tiny">${esc(x.period || x.when || '')}</span>${x.description || x.detail ? `<div class="tiny muted">${esc(x.description || x.detail)}</div>` : ''}</li>`).join('');
-  openModal(
-    `Resume / CV — ${cv.name || 'Candidate'} (view only)`,
-    `<div class="cv-doc">
-      <div class="kv"><span class="k">Contact</span><span class="v">${esc(cv.email || '')}${cv.phone ? ' · ' + esc(cv.phone) : ''}${cv.location ? ' · ' + esc(cv.location) : ''}${cv.linkedin ? ' · ' + esc(cv.linkedin) : ''}</span></div>
-      ${cv.summary ? `<div class="kv"><span class="k">Summary</span><span class="v">${esc(cv.summary)}</span></div>` : ''}
-      <div class="cv-block"><div class="small bold">Education</div><ul>${eduHtml || '<li class="muted">—</li>'}</ul></div>
-      ${projHtml ? `<div class="cv-block"><div class="small bold">Projects</div><ul>${projHtml}</ul></div>` : ''}
-      ${expHtml ? `<div class="cv-block"><div class="small bold">Work experience</div><ul>${expHtml}</ul></div>` : ''}
-      <div class="cv-block"><div class="small bold">Skills</div><div class="mt8">${chips(cv.skills || [])}</div></div>
-    </div>`,
-    `<button class="btn" id="close-cv">Close</button>`
-  );
-  $('#close-cv').addEventListener('click', closeModal);
+    const cv = a.resumeSnapshot || {};
+    const education = (cv.education || []).filter((e) => e.institution);
+    const projects = cv.projects || [];
+    const experience = cv.experience || [];
+
+    openModal(
+        'Resume',
+        `<form class="stack">
+      <div class="card pad stack">
+        <h3 class="cv-sec">1 · Personal information</h3>
+        <div class="row wrap">${roField('Full name', cv.name)}${roField('Headline', cv.headline)}</div>
+        <div class="row wrap">${roField('Email', cv.email)}${roField('H/P number', cv.phone)}</div>
+        <div class="row wrap">${roField('Location', cv.location)}${roField('LinkedIn profile', cv.linkedin)}</div>
+        ${roArea('Professional summary', cv.summary)}
+      </div>
+
+      <div class="card pad stack">
+        <h3 class="cv-sec">2 · Education</h3>
+        ${education.length ? education.map((e) => `<div class="cv-row">
+          <div class="row wrap">${roField('Institution name', e.institution)}${roField('Field of study', e.fieldOfStudy)}</div>
+          <div class="row wrap">${roField('Start year', e.startYear)}${roField('End year', e.endYear)}</div>
+        </div>`).join('') : '<div class="muted small">—</div>'}
+      </div>
+
+      ${projects.length ? `<div class="card pad stack">
+        <h3 class="cv-sec">3 · Past projects</h3>
+        ${projects.map((p) => `<div class="cv-row">${roField('Project name', p.name)}${roArea('Description', p.description)}</div>`).join('')}
+      </div>` : ''}
+
+      ${experience.length ? `<div class="card pad stack">
+        <h3 class="cv-sec">4 · Work experience</h3>
+        ${experience.map((x) => `<div class="cv-row">
+          <div class="row wrap">${roField('Role title', x.title)}${roField('Organisation', x.organisation || x.org)}</div>
+          ${roField('Period', x.period || x.when)}
+          ${roArea('Description', x.description || x.detail)}
+        </div>`).join('')}
+      </div>` : ''}
+
+      <div class="card pad stack">
+        <h3 class="cv-sec">5 · Skills</h3>
+        <div>${(cv.skills || []).length ? chips(cv.skills) : '<span class="muted small">—</span>'}</div>
+      </div>
+    </form>`,
+        `<button class="btn" id="close-cv">Close</button>`
+    );
+    widenModal();
+    $('#close-cv').addEventListener('click', closeModal);
 }
 
 /* Interview scheduler — a month calendar where the candidate's busy days are
@@ -1135,8 +1186,12 @@ async function openInterviewScheduler(appId, profileId, onDone) {
     'Schedule interview',
     `<p class="small muted">Pick a date. <span style="color:var(--rose)">Red</span> = the candidate is busy that day (details stay private). The final choice is yours.</p>
      <div id="sched-cal"></div>
-     <div class="mt8 small">Selected: <b id="sched-sel">none</b> <span id="sched-warn" class="tiny" style="color:var(--amber)"></span></div>`,
-    `<button class="btn secondary" id="cancel">Cancel</button><button class="btn" id="ok" disabled>Propose interview</button>`
+     <div class="mt8 small">Selected: <b id="sched-sel">none</b> <span id="sched-warn" class="tiny" style="color:var(--amber)"></span></div>
+        <div class="row wrap mt8">
+            <div class="field" style="margin:0"><label>From</label><input class="input" type="time" id="sched-start" /></div>
+            <div class="field" style="margin:0"><label>To</label><input class="input" type="time" id="sched-end" /></div>
+        </div>`,
+        `<button class="btn secondary" id="cancel">Cancel</button><button class="btn" id="ok" disabled>Propose interview</button>`
   );
 
   const render = () => {
@@ -1160,11 +1215,16 @@ async function openInterviewScheduler(appId, profileId, onDone) {
   $('#cancel').addEventListener('click', closeModal);
   $('#ok').addEventListener('click', async () => {
     if (!selected) return;
+    const start = $('#sched-start').value;
+    const end = $('#sched-end').value;
+    if (!start || !end) return toast('Choose a start and end time.', 'error');
+    if (end < start) return toast('End time must be after start time.', 'error');
     try {
-      await API.setApplicationStatus(appId, 'interview', { interviewDate: selected });
-      closeModal();
-      toast('Interview proposed.', 'success');
-      onDone && onDone();
+        await API.setApplicationStatus(appId, 'interview',
+        { interviewDate: selected, interviewStartTime: start, interviewEndTime: end });
+        closeModal();
+        toast('Interview proposed.', 'success');
+        onDone && onDone();
     } catch (err) { toast(err.message, 'error'); }
   });
 }
@@ -1569,9 +1629,11 @@ Views.calendar = async (app) => {
       <div class="section">
         <div class="section-head"><h2>Upcoming</h2></div>
         <div class="card">
-          ${upcoming.length ? `<table class="data"><tbody>${upcoming.map((e) => `
-            <tr><td class="bold" style="width:130px;">${esc(e.date)}</td><td>${esc(e.title)}</td>
-            <td class="right"><button class="btn small ghost danger" data-del="${e.id}">Remove</button></td></tr>`).join('')}</tbody></table>`
+            ${upcoming.length ? `<table class="data">
+                <thead><tr><th style="width:120px;">Date</th><th style="width:140px;">Time</th><th>Task</th><th></th></tr></thead>
+                <tbody>${upcoming.map((e) => `
+                <tr><td class="bold">${fmtDateDMY(e.date)}</td><td>${e.startTime ? fmtTimeRange(e.startTime, e.endTime) : '<span class="muted">—</span>'}</td><td>${esc(e.title)}</td>
+                <td class="right"><button class="btn small ghost danger" data-del="${e.id}">Remove</button></td></tr>`).join('')}</tbody></table>`
             : emptyState('No schedule entries yet.')}
         </div>
       </div>`;
@@ -1588,23 +1650,32 @@ Views.calendar = async (app) => {
 };
 
 function openDayModal(date, events, onChange) {
-  const dayEvents = events.filter((e) => e.date === date);
-  openModal(
-    `Schedule — ${date}`,
-    `${dayEvents.length ? `<div class="stack mb16">${dayEvents.map((e) => `<div class="between"><span class="small">${esc(e.title)}</span><button class="btn small ghost danger" data-del="${e.id}">Remove</button></div>`).join('')}</div>` : '<p class="small muted">Nothing scheduled.</p>'}
-     <div class="field" style="margin-top:12px;"><label>Add an entry</label><input class="input" id="ev-title" placeholder="e.g. Class 9am, exam, busy" /></div>`,
-    `<button class="btn secondary" id="cancel">Close</button><button class="btn" id="add">Add</button>`
-  );
-  $('#cancel').addEventListener('click', closeModal);
-  $('#add').addEventListener('click', async () => {
-    const title = $('#ev-title').value.trim();
-    if (!title) return toast('Enter a title.', 'error');
-    try { await API.addScheduleEvent(date, title); closeModal(); toast('Added.', 'success'); onChange(); }
-    catch (err) { toast(err.message, 'error'); }
-  });
-  $$('[data-del]', $('#modal-bg')).forEach((b) => b.addEventListener('click', async () => {
-    await API.deleteScheduleEvent(b.dataset.del); closeModal(); toast('Removed.'); onChange();
-  }));
+    const dayEvents = events.filter((e) => e.date === date)
+        .sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+    const timeLabel = (e) => e.startTime ? `${fmtTimeRange(e.startTime, e.endTime)} · ` : '';
+    openModal(
+        `Schedule — ${date}`,
+        `${dayEvents.length ? `<div class="stack mb16">${dayEvents.map((e) => `<div class="between"><span class="small">${timeLabel(e)}${esc(e.title)}</span><button class="btn small ghost danger" data-del="${e.id}">Remove</button></div>`).join('')}</div>` : '<p class="small muted">Nothing scheduled.</p>'}
+     <div class="field" style="margin-top:12px;"><label>Add an entry</label><input class="input" id="ev-title" placeholder="e.g. Class, exam, busy" /></div>
+     <div class="row wrap">
+       <div class="field" style="margin:0"><label>From</label><input class="input" type="time" id="ev-start" /></div>
+       <div class="field" style="margin:0"><label>To</label><input class="input" type="time" id="ev-end" /></div>
+     </div>`,
+        `<button class="btn secondary" id="cancel">Close</button><button class="btn" id="add">Add</button>`
+    );
+    $('#cancel').addEventListener('click', closeModal);
+    $('#add').addEventListener('click', async () => {
+        const title = $('#ev-title').value.trim();
+        const start = $('#ev-start').value;
+        const end = $('#ev-end').value;
+        if (!title) return toast('Enter a title.', 'error');
+        if (start && end && end < start) return toast('End time must be after start time.', 'error');
+        try { await API.addScheduleEvent(date, title, start, end); closeModal(); toast('Added.', 'success'); onChange(); }
+        catch (err) { toast(err.message, 'error'); }
+    });
+    $$('[data-del]', $('#modal-bg')).forEach((b) => b.addEventListener('click', async () => {
+        await API.deleteScheduleEvent(b.dataset.del); closeModal(); toast('Removed.'); onChange();
+    }));
 }
 
 /* --- Notifications -------------------------------------------------------- */

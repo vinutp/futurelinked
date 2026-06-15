@@ -69,6 +69,8 @@ def apply(ctx):
         "resumeSnapshot": _resume_snapshot(profile),
         # Interview scheduling (filled later by the employer / candidate):
         "interviewDate": "",
+        "interviewStartTime": "",
+        "interviewEndTime": "",
         "interviewResponse": "",      # '' | 'accepted' | 'rejected'
         "interviewRejectReason": "",
         "status": "applied",
@@ -134,7 +136,14 @@ def set_status(ctx):
         date = (ctx.body.get("interviewDate") or "").strip()
         if not date:
             raise ApiError(400, "An interview date is required.")
-        patch.update({"interviewDate": date, "interviewResponse": "", "interviewRejectReason": ""})
+        start = (ctx.body.get("interviewStartTime") or "").strip()
+        end = (ctx.body.get("interviewEndTime") or "").strip()
+        if not start or not end:
+            raise ApiError(400, "An interview start and end time are required.")
+        patch.update({
+            "interviewDate": date, "interviewStartTime": start, "interviewEndTime": end,
+            "interviewResponse": "", "interviewRejectReason": "",
+        })
 
     updated = store.update("applications", lambda a: a["id"] == ctx.params["id"], patch)
 
@@ -144,7 +153,8 @@ def set_status(ctx):
     elif status == "rejected":
         msg = f"Update on your application for {job['title']}: not successful this time."
     else:
-        msg = f"You're invited to interview for {job['title']} on {patch['interviewDate']}."
+        msg = (f"You're invited to interview for {job['title']} on "
+               f"{patch['interviewDate']} at {patch['interviewStartTime']}–{patch['interviewEndTime']}.")
     notify.push(app["candidateId"], "status", msg, "#/applications")
     return {"application": updated}
 

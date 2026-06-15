@@ -45,6 +45,32 @@ function timeAgo(iso) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
+/** 'YYYY-MM-DD' -> 'D/M/YYYY' (e.g. 23/2/2026). */
+function fmtDateDMY(iso) {
+    if (!iso) return '';
+    const [y, m, d] = String(iso).split('-');
+    if (!y || !m || !d) return iso;
+    return `${Number(d)}/${Number(m)}/${y}`;
+}
+
+/** 24h 'HH:MM' -> 12h (e.g. '22:00' -> '10pm', '14:30' -> '2:30pm'). */
+function fmtTime12(t) {
+    if (!t) return '';
+    const [hStr, mStr] = String(t).split(':');
+    let h = Number(hStr);
+    const m = Number(mStr);
+    if (Number.isNaN(h)) return t;
+    const ampm = h >= 12 ? 'pm' : 'am';
+    h = h % 12; if (h === 0) h = 12;
+    return m ? `${h}:${String(m).padStart(2, '0')}${ampm}` : `${h}${ampm}`;
+}
+
+/** Format a start/end pair, e.g. '10pm–11pm'. */
+function fmtTimeRange(start, end) {
+    if (!start) return '';
+    return end ? `${fmtTime12(start)}–${fmtTime12(end)}` : fmtTime12(start);
+}
+
 function matchTier(score) {
   if (score >= 70) return 'high';
   if (score >= 45) return 'mid';

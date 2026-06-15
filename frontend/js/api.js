@@ -88,7 +88,8 @@ const API = {
 
   // schedule / calendar
   schedule: () => request('GET', '/schedule'),
-  addScheduleEvent: (date, title) => request('POST', '/schedule', { date, title }),
+  addScheduleEvent: (date, title, startTime, endTime) =>
+    request('POST', '/schedule', { date, title, startTime, endTime }),
   deleteScheduleEvent: (id) => request('DELETE', `/schedule/${id}`),
   candidateBusy: (profileId) => request('GET', `/schedule/busy/${profileId}`),
 

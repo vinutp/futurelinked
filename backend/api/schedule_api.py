@@ -31,6 +31,8 @@ def add_event(ctx):
         "userId": ctx.user["id"],
         "date": date,
         "title": title,
+        "startTime": (ctx.body.get("startTime") or "").strip(),
+        "endTime": (ctx.body.get("endTime") or "").strip(),
         "createdAt": datetime.now(timezone.utc).isoformat(),
     })
     return 201, {"event": event}
